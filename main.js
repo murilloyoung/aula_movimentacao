@@ -1,27 +1,76 @@
 const canvas = document.getElementById("jogoCanvas");
 const ctx = canvas.getContext("2d");
+const spanPlacar = document.getElementById("placar");
+
+let pontuacao = 0;
+let frames = 0;
+let jogoAtivo = true;
+let velocidadeGlobal = 3;
+let frequenciaCriacao = 60;
 
 // Config personagem
 let player = {
-  x: 360,
-  y: 0,
-  tamanho: 40,
-  velocidade: 5,
+  x: 180,
+  y: 430,
+  tamanho: 35,
+  velocidade: 6,
   cor: "blue",
 };
+
+let obstaculos = [];
 
 // Monitor de Teclas
 let teclas = {};
 window.addEventListener("keydown", (e) => (teclas[e.key] = true));
 window.addEventListener("keyup", (e) => (teclas[e.key] = false));
 
+function gerenciarMovimento() {}
+// Movimentação do jogador
+if (teclas["ArrowLeft"] && player.x > 0) {
+  player.x -= player.velocidade;
+}
+
+if (teclas["ArrowRight"] && player.x < canvas.width - player.tamanho) {
+  player.x += player.velocidade;
+}
+
+if (teclas["ArrowUp"] && player.y > 0) {
+  player.y -= player.velocidade;
+}
+
+if (teclas["ArrowDown"] && player.y < canvas.height - player.tamanho) {
+  player.y += player.velocidade;
+}
+
+setInterval(() => {
+  if (jogoAtivo) {
+    velocidadeGlobal += 1;
+    console.log("Aumentando velocidade base para: " + velocidadeGlobal);
+  }
+}, 3000);
+
 function atualizar() {
-  // Movimentaçao eixo y
-  if (teclas["ArrowUp"]) player.y -= player.velocidade;
-  if (teclas["ArrowDown"]) player.y += player.velocidade;
-  // Movimentaçao eixo x
-  if (teclas["ArrowLeft"]) player.x -= player.velocidade;
-  if (teclas["ArrowRight"]) player.x += player.velocidade;
+  frames++;
+  if (frames % frequenciaCriacao === 0) {
+    obstaculos.push({
+      x: Math.random() * (canvas.width - 25),
+      y: -30,
+      tamanho: 25,
+      cor: "#e74c3c",
+    });
+  }
+}
+
+// ! Movimentaçao player
+function atualizar() {
+  if (teclas["ArrowUp"] || teclas["w"] || teclas["W"])
+    player.y -= player.velocidade;
+  if (teclas["ArrowDown"] || teclas["s"] || teclas["S"])
+    player.y += player.velocidade;
+  if (teclas["ArrowLeft"] || teclas["a"] || teclas["A"])
+    player.x -= player.velocidade;
+  if (teclas["ArrowRight"] || teclas["d"] || teclas["D"])
+    player.x += player.velocidade;
 
   // colisão com bordas do canvas
   if (player.x < 1) player.x = 0;
