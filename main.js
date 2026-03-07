@@ -1,3 +1,4 @@
+// CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
 const canvas = document.getElementById("jogoCanvas");
 const ctx = canvas.getContext("2d");
 const spanPlacar = document.getElementById("placar");
@@ -5,101 +6,112 @@ const spanPlacar = document.getElementById("placar");
 let pontuacao = 0;
 let frames = 0;
 let jogoAtivo = true;
-let velocidadeGlobal = 3;
-let frequenciaCriacao = 60;
+let velocidadeGlobal = 3; 
+let frequenciaCriacao = 30; 
 
-// Config personagem
 let player = {
-  x: 180,
-  y: 430,
-  tamanho: 35,
-  velocidade: 6,
-  cor: "blue",
+    x: 180,
+    y: 430,
+    tamanho: 35,
+    velocidade: 60,
+    cor: "#3498db"
 };
 
 let obstaculos = [];
 
-// Monitor de Teclas
+// ENTRADA E MOVIMENTAÇÃO 
 let teclas = {};
-window.addEventListener("keydown", (e) => (teclas[e.key] = true));
-window.addEventListener("keyup", (e) => (teclas[e.key] = false));
+window.addEventListener("keydown", (e) => teclas[e.key] = true);
+window.addEventListener("keyup", (e) => teclas[e.key] = false);
 
-function gerenciarMovimento() {}
-// Movimentação do jogador
-if (teclas["ArrowLeft"] && player.x > 0) {
-  player.x -= player.velocidade;
+function gerenciarMovimento() {
+    if (teclas["ArrowLeft"] && player.x > 0) {
+        player.x -= player.velocidade;
+    }
+    if (teclas["ArrowRight"] && player.x + player.tamanho < canvas.width) {
+        player.x += player.velocidade;
+    }
+    if (teclas["ArrowUp"] && player.y > 0) {
+        player.y -= player.velocidade;
+    }
+    if (teclas["ArrowDown"] && player.y + player.tamanho < canvas.height) {
+        player.y += player.velocidade;
+    }
 }
 
-if (teclas["ArrowRight"] && player.x < canvas.width - player.tamanho) {
-  player.x += player.velocidade;
-}
-
-if (teclas["ArrowUp"] && player.y > 0) {
-  player.y -= player.velocidade;
-}
-
-if (teclas["ArrowDown"] && player.y < canvas.height - player.tamanho) {
-  player.y += player.velocidade;
-}
-
+// LÓGICA DE DIFICULDADE
 setInterval(() => {
-  if (jogoAtivo) {
-    velocidadeGlobal += 1;
-    console.log("Aumentando velocidade base para: " + velocidadeGlobal);
-  }
-}, 3000);
+    if (jogoAtivo) {
+        velocidadeGlobal += 1;
+        console.log("Aumentando velocidade base para: " + velocidadeGlobal);
+    }
+}, 30000);
 
+// ATUALIZAÇÃO DOS OBJETOS (LÓGICA)
 function atualizar() {
-  frames++;
-  if (frames % frequenciaCriacao === 0) {
-    obstaculos.push({
-      x: Math.random() * (canvas.width - 25),
-      y: -30,
-      tamanho: 25,
-      cor: "#e74c3c",
-    });
-  }
+    frames++;
+
+    if (frames % frequenciaCriacao === 0) {
+        obstaculos.push({
+            x: Math.random() * (canvas.width - 25),
+            y: -30,
+            tamanho: 25,
+            cor: "#e74c3c"
+        });
+    }
+
+    for (let i = 0; i < obstaculos.length; i++) {
+        let obs = obstaculos[i];
+        obs.y += velocidadeGlobal; 
+
+        // Verificação de Colisão
+        if (player.x < obs.x + obs.tamanho &&
+            player.x + player.tamanho > obs.x &&
+            player.y < obs.y + obs.tamanho &&
+            player.y + player.tamanho > obs.y) {
+
+            finalizarJogo();
+        }
+
+        // Pontuação e Limpeza
+        if (obs.y > canvas.height) {
+            obstaculos.splice(i, 1);
+            i--;
+            pontuacao++;
+            spanPlacar.innerText = pontuacao;
+        }
+    }
 }
 
-// ! Movimentaçao player
-function atualizar() {
-  if (teclas["ArrowUp"] || teclas["w"] || teclas["W"])
-    player.y -= player.velocidade;
-  if (teclas["ArrowDown"] || teclas["s"] || teclas["S"])
-    player.y += player.velocidade;
-  if (teclas["ArrowLeft"] || teclas["a"] || teclas["A"])
-    player.x -= player.velocidade;
-  if (teclas["ArrowRight"] || teclas["d"] || teclas["D"])
-    player.x += player.velocidade;
-
-  // colisão com bordas do canvas
-  if (player.x < 1) player.x = 0;
-  if (player.y < 1) player.y = 0;
-  if (player.x + player.tamanho > canvas.width) {
-    player.x = canvas.width - player.tamanho;
-  }
-  if (player.y + player.tamanho > canvas.height) {
-    player.y = canvas.height - player.tamanho;
-  }
-}
-
-// limpar tela e criar o personagem
+// DESENHO (SAÍDA VISUAL)
 function desenhar() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = player.cor;
-  ctx.fillRect(player.x, player.y, player.tamanho, player.tamanho);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // desenhar coordenadas
-  ctx.fillStyle = "black";
-  ctx.font = "16px sans-serif";
-  const coordText = `x: ${player.x}, y: ${player.y}`;
-  ctx.fillText(coordText, 10, 20);
+    // Desenha o Player 
+    ctx.fillStyle = player.cor;
+    ctx.fillRect(player.x, player.y, player.tamanho, player.tamanho);
+
+    // Desenha Obstáculos
+    for (let obs of obstaculos) {
+        ctx.fillStyle = obs.cor;
+        ctx.fillRect(obs.x, obs.y, obs.tamanho, obs.tamanho);
+    }
 }
 
-// iniciar o jogo
+// INICIALIZAÇÃO
+function finalizarJogo() {
+    jogoAtivo = false;
+    alert("Fim de Jogo! Pontuação: " + pontuacao);
+    location.reload(); 
+}
+
 function loop() {
-  atualizar();
-  desenhar();
-  requestAnimationFrame(loop);
+    if (jogoAtivo) {
+        gerenciarMovimento();
+        atualizar();
+        desenhar();
+        requestAnimationFrame(loop);
+    }
 }
-loop();
+
+loop(); 
